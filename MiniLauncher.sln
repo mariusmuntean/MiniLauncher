@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniLauncher", "MiniLauncher\MiniLauncher\MiniLauncher.csproj", "{0CAEB89E-BEE0-4FE1-A384-994DEC9BF552}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniLauncher.Sample", "MiniLauncher\MiniLauncher.Sample\MiniLauncher.Sample.csproj", "{0CAEB89E-BEE0-4FE1-A384-994DEC9BF552}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniLauncher.Android", "MiniLauncher\MiniLauncher.Android\MiniLauncher.Android.csproj", "{813A20C5-3488-48BE-892D-C6E5116F0E8A}"
 EndProject

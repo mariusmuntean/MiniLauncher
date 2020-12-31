@@ -4,7 +4,7 @@ using System.Linq;
 using Foundation;
 using UIKit;
 
-namespace MiniLauncher.iOS
+namespace MiniLauncher.Sample.iOS
 {
     public class Application
     {
