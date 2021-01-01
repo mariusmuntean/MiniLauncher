@@ -3,13 +3,38 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MiniLauncher.Sample"
+             xmlns:miniLauncher="clr-namespace:MiniLauncher;assembly=MiniLauncher"
              x:Class="MiniLauncher.Sample.MainPage">
 
     <StackLayout>
-        <!-- Place new controls here -->
-        <Label Text="Welcome to Xamarin.Forms!!"
-               HorizontalOptions="Center"
-               VerticalOptions="CenterAndExpand" />
+        <miniLauncher:Launcher HorizontalOptions="FillAndExpand"
+                               VerticalOptions="FillAndExpand"
+                               BackgroundColor="DodgerBlue">
+            <miniLauncher:Launcher.Items>
+                <Array Type="{x:Type x:Int32}">
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                    <x:Int32>1</x:Int32>
+                </Array>
+            </miniLauncher:Launcher.Items>
+        </miniLauncher:Launcher>
+
     </StackLayout>
 
 </ContentPage>
