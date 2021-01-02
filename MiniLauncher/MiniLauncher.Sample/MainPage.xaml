@@ -9,7 +9,7 @@
     <StackLayout>
         <miniLauncher:Launcher HorizontalOptions="FillAndExpand"
                                VerticalOptions="FillAndExpand"
-                               BackgroundColor="DodgerBlue">
+                               BackgroundColor="#282828">
             <miniLauncher:Launcher.Items>
                 <Array Type="{x:Type x:Int32}">
                     <x:Int32>1</x:Int32>
@@ -33,6 +33,16 @@
                     <x:Int32>1</x:Int32>
                 </Array>
             </miniLauncher:Launcher.Items>
+            <miniLauncher:Launcher.ItemTemplate>
+                <DataTemplate>
+                    <Image Aspect="AspectFit" 
+                           Source="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Unofficial_Windows_logo_variant_-_2002%E2%80%932012_%28Multicolored%29.svg/500px-Unofficial_Windows_logo_variant_-_2002%E2%80%932012_%28Multicolored%29.svg.png">
+                        <Image.Clip>
+                            <EllipseGeometry RadiusX="30" RadiusY="30"></EllipseGeometry>
+                        </Image.Clip>
+                    </Image>
+                </DataTemplate>
+            </miniLauncher:Launcher.ItemTemplate>
         </miniLauncher:Launcher>
 
     </StackLayout>

@@ -24,7 +24,9 @@ namespace MiniLauncher
         {
             base.OnPropertyChanged(propertyName);
 
-            if (propertyName == ItemsProperty.PropertyName)
+            if (propertyName == ItemsProperty.PropertyName
+                || propertyName == ItemTemplateProperty.PropertyName
+            )
             {
                 Test();
             }
@@ -33,16 +35,19 @@ namespace MiniLauncher
         private void Test()
         {
             var edgeLength = 30.0d;
-            
+
             var space = new HexSpace(Items.Select(i => new object()));
             var hex2pix = new Hex2Pix();
+            _content.Children.Clear();
             foreach (var hexPayloadPair in space.Elements())
             {
                 var hex = hexPayloadPair.Key;
                 var payload = hexPayloadPair.Value;
 
                 var (x, y) = hex2pix.ToPix(hex, edgeLength);
-                _content.Children.Add(new BoxView() {BackgroundColor = Color.Gold},
+
+                var view = ItemTemplate != null ? ItemTemplate.CreateContent() as View : new BoxView() {BackgroundColor = Color.Gold};
+                _content.Children.Add(view,
                     Constraint.RelativeToParent(parent =>
                     {
                         var halfWidth = parent.Width / 2.0d;

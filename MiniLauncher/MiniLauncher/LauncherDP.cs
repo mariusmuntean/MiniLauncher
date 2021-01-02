@@ -17,5 +17,19 @@ namespace MiniLauncher
             get => (IEnumerable<int>) GetValue(ItemsProperty);
             set => SetValue(ItemsProperty, value);
         }
+
+        public static readonly BindableProperty ItemTemplateProperty = BindableProperty.Create(
+            nameof(ItemTemplate),
+            typeof(DataTemplate),
+            typeof(Launcher),
+            default(DataTemplate),
+            BindingMode.OneWay
+        );
+
+        public DataTemplate ItemTemplate
+        {
+            get => (DataTemplate) GetValue(ItemTemplateProperty);
+            set => SetValue(ItemTemplateProperty, value);
+        }
     }
 }
