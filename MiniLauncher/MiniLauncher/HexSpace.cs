@@ -19,6 +19,17 @@ namespace MiniLauncher
             new Hex(0, 1)
         };
 
+        public HexSpace()
+        {
+        }
+
+        public HexSpace(IEnumerable<object> payloads)
+        {
+            foreach (var payload in payloads)
+            {
+                Add(payload);
+            }
+        }
 
         public Hex Add(object payload)
         {
@@ -60,6 +71,8 @@ namespace MiniLauncher
         public bool Contains(Hex h) => _space.ContainsKey(h);
         public object GetPayload(Hex h) => _space[h];
         public int Count => _space.Count;
+
+        public IEnumerable<KeyValuePair<Hex, object>> Elements() => _space.AsEnumerable();
 
         private Hex[] GenerateNeighbors(Hex h) => _neighborDirections.Select(dir => new Hex(h.Q + dir.Q, h.R + dir.R)).ToArray();
     }
