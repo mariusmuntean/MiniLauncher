@@ -66,7 +66,7 @@ namespace MiniLauncher
             for (var i = 1; i < Items.Count(); i++)
             {
                 var ringIndex = _ringCompute.ComputeRingIndex(i);
-                var rho = 3 * ringIndex * edgeLength;
+                var rho = 1.5 * ringIndex * edgeLength;
 
                 var currentOffset = angleStep / ringIndex;
                 var theta = (startAngle + previousTheta + currentOffset);
