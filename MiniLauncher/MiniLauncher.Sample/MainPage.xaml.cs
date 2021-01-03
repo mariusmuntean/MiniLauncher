@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using Xamarin.Forms;
-using Path = System.IO.Path;
 
 namespace MiniLauncher.Sample
 {
@@ -16,7 +15,7 @@ namespace MiniLauncher.Sample
             Items = new ObservableCollection<Item>();
             InitializeComponent();
         }
-        
+
         public ObservableCollection<Item> Items { get; set; }
 
         private void OnAddClicked(object sender, EventArgs e)
@@ -35,11 +34,7 @@ namespace MiniLauncher.Sample
             Items.Add(new Item
             {
                 Icon = imageSource,
-                Command = new Command(async () =>
-                {
-                    // await DisplayAlert("Command", $"You tapped on {icon}", "OK");
-                    ChosenAppImage.Source = imageSource;
-                })
+                Command = new Command(async () => { ChosenAppImage.Source = imageSource; })
             });
         }
 
