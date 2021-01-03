@@ -6,6 +6,6 @@ namespace MiniLauncher
     {
         public Command Command { get; set; }
 
-        public string Icon { get; set; }
+        public ImageSource Icon { get; set; }
     }
 }

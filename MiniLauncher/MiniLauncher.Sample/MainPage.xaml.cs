@@ -9,6 +9,8 @@ namespace MiniLauncher.Sample
 {
     public partial class MainPage : ContentPage
     {
+        private Assembly _thisAssembly;
+
         public MainPage()
         {
             Items = new ObservableCollection<Item>();
@@ -21,11 +23,17 @@ namespace MiniLauncher.Sample
         {
             var availableIcons = typeof(MainPage).GetTypeInfo().Assembly.GetManifestResourceNames().Where(r => r.ToLower().EndsWith(".png"));
 
+            if (!availableIcons.Any())
+            {
+                Console.WriteLine("No icons found");
+                return;
+            }
+
             var iconToAddIdx = Items.Count % availableIcons.Count();
             var icon = availableIcons.ElementAt(iconToAddIdx);
-            Items.Add(new Item()
+            Items.Add(new Item
             {
-                Icon = icon,
+                Icon = ImageSource.FromResource(icon, _thisAssembly ??= typeof(MainPage).GetTypeInfo().Assembly),
                 Command = new Command(() => Console.WriteLine(Path.GetFileName(icon)))
             });
         }

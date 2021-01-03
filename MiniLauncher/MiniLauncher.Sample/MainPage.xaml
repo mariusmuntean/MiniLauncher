@@ -8,25 +8,22 @@
              x:Class="MiniLauncher.Sample.MainPage"
              ios:Page.UseSafeArea="True"
              BackgroundColor="#282828">
-    <ContentPage.Resources>
-        <local:ImageResourceConverter x:Key="ImageResourceConverter" />
-    </ContentPage.Resources>
     <Grid>
         <miniLauncher:Launcher HorizontalOptions="FillAndExpand"
                                VerticalOptions="FillAndExpand"
                                x:TypeArguments="local:Item"
                                BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}}"
                                Items="{Binding Items}">
-            <miniLauncher:Launcher.ItemTemplate>
-                <DataTemplate>
-                    <Image Aspect="AspectFit"
-                           Source="{Binding Icon, Converter={StaticResource ImageResourceConverter}}">
-                        <!-- <Image.Clip> -->
-                        <!--     <EllipseGeometry RadiusX="13" RadiusY="13" Center="15,15" /> -->
-                        <!-- </Image.Clip> -->
-                    </Image>
-                </DataTemplate>
-            </miniLauncher:Launcher.ItemTemplate>
+            <!-- <miniLauncher:Launcher.ItemTemplate> -->
+            <!--     <DataTemplate> -->
+            <!--         <Image Aspect="AspectFit" -->
+            <!--                Source="{Binding Icon}"> -->
+            <!--             <Image.Clip> -->
+            <!--                 <EllipseGeometry RadiusX="13" RadiusY="13" Center="15,15" /> -->
+            <!--             </Image.Clip> -->
+            <!--         </Image> -->
+            <!--     </DataTemplate> -->
+            <!-- </miniLauncher:Launcher.ItemTemplate> -->
         </miniLauncher:Launcher>
 
         <StackLayout VerticalOptions="End" HorizontalOptions="Center" Orientation="Horizontal">

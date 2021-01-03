@@ -2,6 +2,7 @@ using System;
 using System.Collections.Specialized;
 using System.Linq;
 using Xamarin.Forms;
+using Xamarin.Forms.Shapes;
 using Color = System.Drawing.Color;
 
 namespace MiniLauncher
@@ -110,7 +111,11 @@ namespace MiniLauncher
             var w = Sqrt3 * Size;
             var h = 2 * Size;
 
-            var view = ItemTemplate != null ? ItemTemplate.CreateContent() as View : new BoxView() {BackgroundColor = Color.Gold};
+            var view = ItemTemplate switch
+            {
+                _ when !(ItemTemplate is null) => ItemTemplate.CreateContent(),
+                _ when ItemTemplate is null => GetDefaultItemTemplate(w, h).CreateContent()
+            } as View;
             view.BindingContext = payload;
             _content.Children.Add(view,
                 Constraint.RelativeToParent(parent =>
@@ -131,6 +136,24 @@ namespace MiniLauncher
                 Constraint.RelativeToParent(parent => w),
                 Constraint.RelativeToParent(parent => h)
             );
+        }
+
+        private DataTemplate GetDefaultItemTemplate(double width, double height)
+        {
+            return new DataTemplate(() =>
+            {
+                var image = new Image {Aspect = Aspect.AspectFill};
+                image.SetBinding(Image.SourceProperty, nameof(IItem.Icon));
+                image.Clip = new EllipseGeometry
+                {
+                    Center = new Point(width / 2.0d, height / 2.0d),
+                    RadiusX = width / 2.0d,
+                    RadiusY = width / 2.0d
+                };
+                image.Scale = 0.9d;
+
+                return image;
+            });
         }
     }
 }
