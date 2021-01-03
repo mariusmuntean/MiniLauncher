@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Xamarin.Forms;
@@ -10,7 +9,8 @@ namespace MiniLauncher
     public partial class Launcher<T> : ContentView where T : IItem
     {
         private const double DegToRandFactor = 0.0174533d;
-        double edgeLength = 30.0d;
+        private const double Sqrt3 = 1.73205080757d;
+        private const double Size = 25.0d;
 
         private readonly RelativeLayout _content;
         private readonly RingCompute _ringCompute;
@@ -81,10 +81,10 @@ namespace MiniLauncher
                 case NotifyCollectionChangedAction.Replace:
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    
+
                     _space.Clear();
                     _content.Children.Clear();
-                    
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -106,7 +106,9 @@ namespace MiniLauncher
 
         private void RenderChild(Hex hex, T payload)
         {
-            var (x, y) = _hex2Pix.ToPix(hex, edgeLength);
+            var (x, y) = _hex2Pix.ToPix(hex, Size);
+            var w = Sqrt3 * Size;
+            var h = 2 * Size;
 
             var view = ItemTemplate != null ? ItemTemplate.CreateContent() as View : new BoxView() {BackgroundColor = Color.Gold};
             view.BindingContext = payload;
@@ -116,7 +118,7 @@ namespace MiniLauncher
                     var halfWidth = parent.Width / 2.0d;
                     return halfWidth // move to center 
                            + x
-                           - edgeLength / 2.0d;
+                           - w / 2.0d;
                 }),
                 Constraint.RelativeToParent(parent =>
                 {
@@ -124,10 +126,10 @@ namespace MiniLauncher
 
                     return halfHeight // move to center 
                            + y
-                           - edgeLength / 2.0d;
+                           - h / 2.0d;
                 }),
-                Constraint.RelativeToParent(parent => edgeLength),
-                Constraint.RelativeToParent(parent => edgeLength)
+                Constraint.RelativeToParent(parent => w),
+                Constraint.RelativeToParent(parent => h)
             );
         }
     }
