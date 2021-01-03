@@ -5,46 +5,33 @@
              xmlns:local="clr-namespace:MiniLauncher.Sample"
              xmlns:miniLauncher="clr-namespace:MiniLauncher;assembly=MiniLauncher"
              x:Class="MiniLauncher.Sample.MainPage">
-
-    <StackLayout>
+    <ContentPage.Resources>
+        <local:ImageResourceConverter x:Key="ImageResourceConverter" />
+    </ContentPage.Resources>
+    <Grid>
         <miniLauncher:Launcher HorizontalOptions="FillAndExpand"
                                VerticalOptions="FillAndExpand"
-                               BackgroundColor="#282828">
-            <miniLauncher:Launcher.Items>
-                <Array Type="{x:Type x:Int32}">
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                    <x:Int32>1</x:Int32>
-                </Array>
-            </miniLauncher:Launcher.Items>
+                               BackgroundColor="#282828"
+                               x:TypeArguments="local:Item"
+                               BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                               Items="{Binding Items}">
             <miniLauncher:Launcher.ItemTemplate>
                 <DataTemplate>
-                    <Image Aspect="AspectFit" 
-                           Source="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Unofficial_Windows_logo_variant_-_2002%E2%80%932012_%28Multicolored%29.svg/500px-Unofficial_Windows_logo_variant_-_2002%E2%80%932012_%28Multicolored%29.svg.png">
+                    <Image Aspect="AspectFit"
+                           Source="{Binding Icon, Converter={StaticResource ImageResourceConverter}}">
                         <Image.Clip>
-                            <EllipseGeometry RadiusX="30" RadiusY="30"></EllipseGeometry>
+                            <EllipseGeometry RadiusX="13" RadiusY="13" Center="15,15" />
                         </Image.Clip>
                     </Image>
                 </DataTemplate>
             </miniLauncher:Launcher.ItemTemplate>
         </miniLauncher:Launcher>
 
-    </StackLayout>
+        <StackLayout VerticalOptions="End" HorizontalOptions="Center" Orientation="Horizontal">
+            <Button Text="Add" Clicked="OnAddClicked" />
+            <Button Text="Remove" Clicked="OnRemoveClicked" />
+        </StackLayout>
+
+    </Grid>
 
 </ContentPage>

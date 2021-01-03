@@ -5,9 +5,9 @@ using Xamarin.Forms.Internals;
 
 namespace MiniLauncher
 {
-    public class HexSpace
+    public class HexSpace<T> where T : IItem
     {
-        private readonly Dictionary<Hex, object> _space = new Dictionary<Hex, object>();
+        private readonly Dictionary<Hex, T> _space = new Dictionary<Hex, T>();
 
         private readonly Hex[] _neighborDirections = new[]
         {
@@ -23,15 +23,20 @@ namespace MiniLauncher
         {
         }
 
-        public HexSpace(IEnumerable<object> payloads)
+        public HexSpace(IEnumerable<T> payloads)
         {
+            if (payloads == null)
+            {
+                return;
+            }
+
             foreach (var payload in payloads)
             {
                 Add(payload);
             }
         }
 
-        public Hex Add(object payload)
+        public Hex Add(T payload)
         {
             // If empty or first free then immediately add
             var first = new Hex(0, 0);
@@ -69,10 +74,11 @@ namespace MiniLauncher
         }
 
         public bool Contains(Hex h) => _space.ContainsKey(h);
-        public object GetPayload(Hex h) => _space[h];
+        public T GetPayload(Hex h) => _space[h];
         public int Count => _space.Count;
+        public void Clear() => _space.Clear();
 
-        public IEnumerable<KeyValuePair<Hex, object>> Elements() => _space.AsEnumerable();
+        public IEnumerable<KeyValuePair<Hex, T>> Elements() => _space.AsEnumerable();
 
         private Hex[] GenerateNeighbors(Hex h) => _neighborDirections.Select(dir => new Hex(h.Q + dir.Q, h.R + dir.R)).ToArray();
     }

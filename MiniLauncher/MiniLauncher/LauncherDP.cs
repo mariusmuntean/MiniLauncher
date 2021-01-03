@@ -3,25 +3,25 @@ using Xamarin.Forms;
 
 namespace MiniLauncher
 {
-    public partial class Launcher
+    public partial class Launcher<T>
     {
         public static BindableProperty ItemsProperty = BindableProperty.Create(
             nameof(Items),
-            typeof(IEnumerable<int>),
-            typeof(Launcher),
-            new[] {1}
+            typeof(IEnumerable<T>),
+            typeof(Launcher<T>),
+            default(IEnumerable<T>)
         );
 
-        public IEnumerable<int> Items
+        public IEnumerable<T> Items
         {
-            get => (IEnumerable<int>) GetValue(ItemsProperty);
+            get => (IEnumerable<T>) GetValue(ItemsProperty);
             set => SetValue(ItemsProperty, value);
         }
 
         public static readonly BindableProperty ItemTemplateProperty = BindableProperty.Create(
             nameof(ItemTemplate),
             typeof(DataTemplate),
-            typeof(Launcher),
+            typeof(Launcher<T>),
             default(DataTemplate),
             BindingMode.OneWay
         );

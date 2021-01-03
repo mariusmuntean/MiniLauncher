@@ -12,10 +12,10 @@ namespace MiniLauncher.Test
         public void AddToEmptySpace()
         {
             // Given
-            var space = new HexSpace();
+            var space = new HexSpace<Item>();
 
             // When
-            var payload = new object();
+            var payload = new Item();
             var h = space.Add(payload);
 
             // Then
@@ -28,10 +28,10 @@ namespace MiniLauncher.Test
         public void FillUpFirstTwoRings()
         {
             // Given
-            var space = new HexSpace();
+            var space = new HexSpace<Item>();
 
             // When
-            var payloads = Enumerable.Range(0, 7).Select(i => new object());
+            var payloads = Enumerable.Range(0, 7).Select(i => new Item());
             var hexes = new List<Hex>();
             foreach (var payload in payloads)
             {
@@ -45,6 +45,10 @@ namespace MiniLauncher.Test
                 var p = space.GetPayload(h);
                 payloads.Should().Contain(p);
             });
+        }
+
+        class Item : IItem
+        {
         }
     }
 }

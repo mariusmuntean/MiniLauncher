@@ -14,6 +14,48 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MiniLauncher\MiniLauncher.csproj" />
+        <ProjectReference Include="..\MiniLauncher\MiniLauncher.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="icons\applemaps.png" />
+        <EmbeddedResource Include="icons\applemaps.png" />
+        <None Remove="icons\appstore.png" />
+        <EmbeddedResource Include="icons\appstore.png" />
+        <None Remove="icons\facebook.png" />
+        <EmbeddedResource Include="icons\facebook.png" />
+        <None Remove="icons\facetime.png" />
+        <EmbeddedResource Include="icons\facetime.png" />
+        <None Remove="icons\icloud.png" />
+        <EmbeddedResource Include="icons\icloud.png" />
+        <None Remove="icons\java.png" />
+        <EmbeddedResource Include="icons\java.png" />
+        <None Remove="icons\mail.png" />
+        <EmbeddedResource Include="icons\mail.png" />
+        <None Remove="icons\music.png" />
+        <EmbeddedResource Include="icons\music.png" />
+        <None Remove="icons\photos.png" />
+        <EmbeddedResource Include="icons\photos.png" />
+        <None Remove="icons\powerpoint.png" />
+        <EmbeddedResource Include="icons\powerpoint.png" />
+        <None Remove="icons\reddit.png" />
+        <EmbeddedResource Include="icons\reddit.png" />
+        <None Remove="icons\safari.png" />
+        <EmbeddedResource Include="icons\safari.png" />
+        <None Remove="icons\settings.png" />
+        <EmbeddedResource Include="icons\settings.png" />
+        <None Remove="icons\sms.png" />
+        <EmbeddedResource Include="icons\sms.png" />
+        <None Remove="icons\spotify.png" />
+        <EmbeddedResource Include="icons\spotify.png" />
+        <None Remove="icons\tips.png" />
+        <EmbeddedResource Include="icons\tips.png" />
+        <None Remove="icons\twitter.png" />
+        <EmbeddedResource Include="icons\twitter.png" />
+        <None Remove="icons\wallet.png" />
+        <EmbeddedResource Include="icons\wallet.png" />
+        <None Remove="icons\whatsapp.png" />
+        <None Remove="icons\instagram.png" />
+        <EmbeddedResource Include="icons\instagram.png" />
     </ItemGroup>
 </Project>
