@@ -12,6 +12,7 @@
         <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
         <AssemblyName>MiniLauncher.iOS</AssemblyName>
         <MtouchHttpClientHandler>NSUrlSessionHandler</MtouchHttpClientHandler>
+        <LangVersion>8</LangVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
         <DebugSymbols>true</DebugSymbols>

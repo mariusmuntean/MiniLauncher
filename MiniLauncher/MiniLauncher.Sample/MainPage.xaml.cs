@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using Xamarin.Forms;
-using Xamarin.Forms.Shapes;
 using Path = System.IO.Path;
 
 namespace MiniLauncher.Sample

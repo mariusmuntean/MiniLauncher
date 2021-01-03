@@ -4,14 +4,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:MiniLauncher.Sample"
              xmlns:miniLauncher="clr-namespace:MiniLauncher;assembly=MiniLauncher"
-             x:Class="MiniLauncher.Sample.MainPage">
+             xmlns:ios="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core"
+             x:Class="MiniLauncher.Sample.MainPage"
+             ios:Page.UseSafeArea="True"
+             BackgroundColor="#282828">
     <ContentPage.Resources>
         <local:ImageResourceConverter x:Key="ImageResourceConverter" />
     </ContentPage.Resources>
     <Grid>
         <miniLauncher:Launcher HorizontalOptions="FillAndExpand"
                                VerticalOptions="FillAndExpand"
-                               BackgroundColor="#282828"
                                x:TypeArguments="local:Item"
                                BindingContext="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}}"
                                Items="{Binding Items}">
@@ -19,9 +21,9 @@
                 <DataTemplate>
                     <Image Aspect="AspectFit"
                            Source="{Binding Icon, Converter={StaticResource ImageResourceConverter}}">
-                        <Image.Clip>
-                            <EllipseGeometry RadiusX="13" RadiusY="13" Center="15,15" />
-                        </Image.Clip>
+                        <!-- <Image.Clip> -->
+                        <!--     <EllipseGeometry RadiusX="13" RadiusY="13" Center="15,15" /> -->
+                        <!-- </Image.Clip> -->
                     </Image>
                 </DataTemplate>
             </miniLauncher:Launcher.ItemTemplate>

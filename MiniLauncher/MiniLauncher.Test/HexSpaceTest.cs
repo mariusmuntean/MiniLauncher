@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
-using Xamarin.Forms.Internals;
 using Xunit;
 
 namespace MiniLauncher.Test
