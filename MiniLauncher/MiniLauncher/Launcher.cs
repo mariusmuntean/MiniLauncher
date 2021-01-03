@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Xamarin.Forms;
@@ -12,6 +14,9 @@ namespace MiniLauncher
         private const double DegToRandFactor = 0.0174533d;
         private const double Sqrt3 = 1.73205080757d;
         private const double Size = 25.0d;
+        private const double ChildNeutralScale = 0.9d;
+        private const string ChildReleasedAnimationName = "ChildReleasedAnimation";
+        private const string ChildPressedAnimationName = "ChildPressedAnimation";
 
         private readonly RelativeLayout _content;
         private readonly RingCompute _ringCompute;
@@ -114,7 +119,7 @@ namespace MiniLauncher
             var view = ItemTemplate switch
             {
                 _ when !(ItemTemplate is null) => ItemTemplate.CreateContent(),
-                _ when ItemTemplate is null => GetDefaultItemTemplate(w, h).CreateContent()
+                _ when ItemTemplate is null => GetDefaultItemTemplate(payload, w, h).CreateContent()
             } as View;
             view.BindingContext = payload;
             _content.Children.Add(view,
@@ -138,22 +143,84 @@ namespace MiniLauncher
             );
         }
 
-        private DataTemplate GetDefaultItemTemplate(double width, double height)
+        private DataTemplate GetDefaultItemTemplate(T payload, double width, double height)
         {
             return new DataTemplate(() =>
             {
-                var image = new Image {Aspect = Aspect.AspectFill};
-                image.SetBinding(Image.SourceProperty, nameof(IItem.Icon));
-                image.Clip = new EllipseGeometry
+                var imageButton = new ImageButton {Aspect = Aspect.AspectFill};
+                imageButton.SetBinding(ImageButton.SourceProperty, nameof(IItem.Icon));
+                imageButton.Clip = new EllipseGeometry
                 {
                     Center = new Point(width / 2.0d, height / 2.0d),
                     RadiusX = width / 2.0d,
                     RadiusY = width / 2.0d
                 };
-                image.Scale = 0.9d;
+                imageButton.Scale = ChildNeutralScale;
 
-                return image;
+                imageButton.SetBinding(ImageButton.CommandProperty, nameof(IItem.Command));
+
+                imageButton.Pressed += (sender, args) => { OnChildPressed(payload); };
+                imageButton.Released += (sender, args) => { OnChildReleased(payload); };
+
+                return imageButton;
             });
+        }
+
+        private void OnChildPressed(T payload)
+        {
+            var childrenToAnimate = FindChildrenToAnimate(payload);
+
+            var startScale = childrenToAnimate.First().Scale;
+            var endScale = 0.9d * startScale;
+            var childrenAnimation = new Animation(d =>
+            {
+                foreach (var child in childrenToAnimate)
+                {
+                    child.Scale = d;
+                }
+            }, startScale, endScale, Easing.CubicInOut);
+            
+            this.AbortAnimation(ChildReleasedAnimationName);
+            childrenAnimation.Commit(this, ChildPressedAnimationName);
+        }
+
+        private void OnChildReleased(T payload)
+        {
+            var childrenToAnimate = FindChildrenToAnimate(payload);
+
+            var startScale = childrenToAnimate.First().Scale;
+            var endScale = ChildNeutralScale;
+            var childrenAnimation = new Animation(d =>
+            {
+                foreach (var child in childrenToAnimate)
+                {
+                    child.Scale = d;
+                }
+            }, startScale, endScale, Easing.CubicInOut);
+
+            this.AbortAnimation(ChildPressedAnimationName);
+            childrenAnimation.Commit(this, ChildReleasedAnimationName);
+        }
+
+        private View[] FindChildrenToAnimate(T payload)
+        {
+            var matchingHexPayloadPair = _space.Elements().FirstOrDefault(hexPayloadPair => hexPayloadPair.Value == payload);
+            if (matchingHexPayloadPair.Equals(default(KeyValuePair<Hex, T>)))
+            {
+                return new View[] { };
+            }
+
+            var neighborHexes = _space.GetNeighborHexes(matchingHexPayloadPair.Key);
+            if (!neighborHexes.Any())
+            {
+                return new View[] { };
+            }
+
+            var childPayloads = new HashSet<T>(neighborHexes.Select(h => _space.GetPayload(h)));
+            childPayloads.Add(payload);
+
+            var childrenToAnimate = _content.Children.Where(child => childPayloads.Contains(child.BindingContext)).ToArray();
+            return childrenToAnimate;
         }
     }
 }

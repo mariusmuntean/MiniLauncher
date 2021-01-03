@@ -16,7 +16,7 @@ namespace MiniLauncher.Sample
             Items = new ObservableCollection<Item>();
             InitializeComponent();
         }
-
+        
         public ObservableCollection<Item> Items { get; set; }
 
         private void OnAddClicked(object sender, EventArgs e)
@@ -31,10 +31,15 @@ namespace MiniLauncher.Sample
 
             var iconToAddIdx = Items.Count % availableIcons.Count();
             var icon = availableIcons.ElementAt(iconToAddIdx);
+            var imageSource = ImageSource.FromResource(icon, _thisAssembly ??= typeof(MainPage).GetTypeInfo().Assembly);
             Items.Add(new Item
             {
-                Icon = ImageSource.FromResource(icon, _thisAssembly ??= typeof(MainPage).GetTypeInfo().Assembly),
-                Command = new Command(() => Console.WriteLine(Path.GetFileName(icon)))
+                Icon = imageSource,
+                Command = new Command(async () =>
+                {
+                    // await DisplayAlert("Command", $"You tapped on {icon}", "OK");
+                    ChosenAppImage.Source = imageSource;
+                })
             });
         }
 

@@ -80,6 +80,13 @@ namespace MiniLauncher
 
         public IEnumerable<KeyValuePair<Hex, T>> Elements() => _space.AsEnumerable();
 
+        public Hex[] GetNeighborHexes(Hex hex)
+        {
+            var theoreticNeighbors = GenerateNeighbors(hex);
+            return theoreticNeighbors.Where(n => _space.ContainsKey(n)).ToArray();
+        }
+
         private Hex[] GenerateNeighbors(Hex h) => _neighborDirections.Select(dir => new Hex(h.Q + dir.Q, h.R + dir.R)).ToArray();
+        
     }
 }
