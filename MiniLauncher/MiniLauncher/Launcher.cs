@@ -21,6 +21,11 @@ namespace MiniLauncher
         private readonly RelativeLayout _content;
         private readonly RingCompute _ringCompute;
 
+        private double _xTranslationAtGestureStart = 0.0d;
+        private double _yTranslationAtGestureStart = 0.0d;
+        private double _xTranslation = 0.0d;
+        private double _yTranslation = 0.0d;
+
         private HexSpace<T> _space = new HexSpace<T>();
         private readonly Hex2Pix _hex2Pix = new Hex2Pix();
 
@@ -29,7 +34,54 @@ namespace MiniLauncher
             _ringCompute = new RingCompute();
 
             _content = new RelativeLayout();
+            _content.IsClippedToBounds = true;
             Content = _content;
+
+            var panGestureRecognizer = new PanGestureRecognizer();
+            panGestureRecognizer.PanUpdated += OnPanUpdated;
+            this.GestureRecognizers.Add(panGestureRecognizer);
+
+            var pinchGestureRecognizer = new PinchGestureRecognizer();
+            pinchGestureRecognizer.PinchUpdated += OnPinchUpdated;
+            this.GestureRecognizers.Add(pinchGestureRecognizer);
+        }
+
+        private void OnPinchUpdated(object sender, PinchGestureUpdatedEventArgs e)
+        {
+            Console.WriteLine("pinch: " + e.Status);
+        }
+
+        private void OnPanUpdated(object sender, PanUpdatedEventArgs e)
+        {
+            Console.WriteLine("pan: " + e.StatusType);
+            switch (e.StatusType)
+            {
+                case GestureStatus.Started:
+                    _xTranslationAtGestureStart = _xTranslation;
+                    _yTranslationAtGestureStart = _yTranslation;
+                    break;
+                case GestureStatus.Running:
+                    _xTranslation = _xTranslationAtGestureStart + e.TotalX;
+                    _yTranslation = _yTranslationAtGestureStart + e.TotalY;
+                    break;
+                case GestureStatus.Completed:
+                    break;
+                case GestureStatus.Canceled:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            TranslateChildren();
+        }
+
+        private void TranslateChildren()
+        {
+            foreach (var child in _content.Children)
+            {
+                child.TranslationX = _xTranslation;
+                child.TranslationY = _yTranslation;
+            }
         }
 
         protected override void OnPropertyChanged(string propertyName = null)
@@ -121,22 +173,24 @@ namespace MiniLauncher
                 _ when !(ItemTemplate is null) => ItemTemplate.CreateContent(),
                 _ when ItemTemplate is null => GetDefaultItemTemplate(payload, w, h).CreateContent()
             } as View;
+            view.TranslationX = _xTranslation;
+            view.TranslationY = _yTranslation;
             view.BindingContext = payload;
             _content.Children.Add(view,
                 Constraint.RelativeToParent(parent =>
                 {
                     var halfWidth = parent.Width / 2.0d;
                     return halfWidth // move to center 
-                           + x
-                           - w / 2.0d;
+                           + x // move to own position
+                           - w / 2.0d; // center
                 }),
                 Constraint.RelativeToParent(parent =>
                 {
                     var halfHeight = parent.Height / 2.0d;
 
                     return halfHeight // move to center 
-                           + y
-                           - h / 2.0d;
+                           + y // move to own position
+                           - h / 2.0d; // center
                 }),
                 Constraint.RelativeToParent(parent => w),
                 Constraint.RelativeToParent(parent => h)
@@ -156,6 +210,7 @@ namespace MiniLauncher
                     RadiusY = width / 2.0d
                 };
                 imageButton.Scale = ChildNeutralScale;
+                //imageButton.InputTransparent = true;
 
                 imageButton.SetBinding(ImageButton.CommandProperty, nameof(IItem.Command));
 
@@ -179,7 +234,7 @@ namespace MiniLauncher
                     child.Scale = d;
                 }
             }, startScale, endScale, Easing.CubicInOut);
-            
+
             this.AbortAnimation(ChildReleasedAnimationName);
             childrenAnimation.Commit(this, ChildPressedAnimationName);
         }

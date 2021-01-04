@@ -29,6 +29,7 @@
                x:Name="ChosenAppImage" />
 
         <miniLauncher:Launcher Grid.Row="2"
+                               BackgroundColor="DimGray"
                                HorizontalOptions="FillAndExpand"
                                VerticalOptions="FillAndExpand"
                                x:TypeArguments="local:Item"
