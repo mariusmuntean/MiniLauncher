@@ -86,7 +86,31 @@ namespace MiniLauncher
             return theoreticNeighbors.Where(n => _space.ContainsKey(n)).ToArray();
         }
 
+        public Hex[] GetNearestHexes(Hex hex)
+        {
+            if (!_space.Any())
+            {
+                return new Hex[] { };
+            }
+
+            var nearestHexes = _space
+                .Where(hexPayloadKV => !hexPayloadKV.Key.Equals(hex))
+                .Select(hexPayloadKV => (hexPayloadKV.Key, GetDistance(hex, hexPayloadKV.Key)))
+                .GroupBy(distanceGrouping => distanceGrouping.Item2)
+                .OrderBy(distanceGrouping => distanceGrouping.Key)
+                .First();
+
+            return nearestHexes.Select((hexDistTuple, i) => hexDistTuple.Key).ToArray();
+        }
+
+        private int GetDistance(Hex a, Hex b)
+        {
+            static (int x, int y, int z) AxialToCube(Hex h) => (h.Q, h.R, -h.Q - h.R);
+            static int CubeDistance((int x, int y, int z) cube1, (int x, int y, int z) cube2) => Math.Max(Math.Max(Math.Abs(cube1.x - cube2.x), Math.Abs(cube1.y - cube2.y)), Math.Abs(cube1.z - cube2.z));
+
+            return CubeDistance(AxialToCube(a), AxialToCube(b));
+        }
+
         private Hex[] GenerateNeighbors(Hex h) => _neighborDirections.Select(dir => new Hex(h.Q + dir.Q, h.R + dir.R)).ToArray();
-        
     }
 }

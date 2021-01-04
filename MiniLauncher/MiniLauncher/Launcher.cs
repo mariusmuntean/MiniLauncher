@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Xamarin.Forms;
 using Xamarin.Forms.Shapes;
-using Color = System.Drawing.Color;
 
 namespace MiniLauncher
 {
@@ -13,8 +11,9 @@ namespace MiniLauncher
     {
         private const double DegToRandFactor = 0.0174533d;
         private const double Sqrt3 = 1.73205080757d;
+        private const double Sqrt3_by_3 = 0.57735026919d;
         private const double Size = 25.0d;
-        private const double ChildNeutralScale = 0.9d;
+        private const double ChildNeutralScale = 0.8d;
         private const string ChildReleasedAnimationName = "ChildReleasedAnimation";
         private const string ChildPressedAnimationName = "ChildPressedAnimation";
 
@@ -53,7 +52,6 @@ namespace MiniLauncher
 
         private void OnPanUpdated(object sender, PanUpdatedEventArgs e)
         {
-            Console.WriteLine("pan: " + e.StatusType);
             switch (e.StatusType)
             {
                 case GestureStatus.Started:
@@ -65,6 +63,7 @@ namespace MiniLauncher
                     _yTranslation = _yTranslationAtGestureStart + e.TotalY;
                     break;
                 case GestureStatus.Completed:
+                    SnapToNearestHex();
                     break;
                 case GestureStatus.Canceled:
                     break;
@@ -73,6 +72,55 @@ namespace MiniLauncher
             }
 
             TranslateChildren();
+        }
+
+        private void SnapToNearestHex()
+        {
+            // If the space has no hexes, then just leave
+            if (_space.Count == 0)
+            {
+                return;
+            }
+
+            // First, work out which Hex is now in the center. It might be an occupied Hex or a free one.
+            var fractionalQ = (Sqrt3_by_3 * -_xTranslation - 0.3333 * -_yTranslation) / Size;
+            var fractionalR = 0.6666 * -_yTranslation / Size;
+
+            var q = (int) Math.Truncate(fractionalQ);
+            var r = (int) Math.Truncate(fractionalR);
+            var centerHex = new Hex(q, r);
+
+            // If occupied Hex: just center it.
+            if (_space.Contains(centerHex))
+            {
+                SnapToHex(centerHex);
+            }
+            else // If free Hex: find the nearest occupied Hex and move it to the center
+            {
+                var nearestHex = _space.GetNearestHexes(centerHex).First();
+                SnapToHex(nearestHex);
+            }
+
+            void SnapToHex(Hex hex)
+            {
+                var centerPayload = _space.GetPayload(hex);
+                var centerChild = _content.Children.First(c => c.BindingContext == centerPayload);
+                SnapChildren(
+                    _content.Width / 2.0d - (centerChild.X + centerChild.Width / 2.0d + _xTranslation),
+                    _content.Height / 2.0d - (centerChild.Y + centerChild.Height / 2.0d + _yTranslation)
+                );
+            }
+        }
+
+        private void SnapChildren(double horizontalDistance, double verticalDistance)
+        {
+            var horizontalSnapAnimation = new Animation(d => { _xTranslation = d; }, _xTranslation, _xTranslation + horizontalDistance, easing: Easing.CubicOut);
+            var verticalSnapAnimation = new Animation(d => { _yTranslation = d; }, _yTranslation, _yTranslation + verticalDistance, easing: Easing.CubicOut);
+
+            var parentAnimation = new Animation(d => TranslateChildren());
+            parentAnimation.Add(0, 1, horizontalSnapAnimation);
+            parentAnimation.Add(0, 1, verticalSnapAnimation);
+            parentAnimation.Commit(this, "SnapChildrenAnimation");
         }
 
         private void TranslateChildren()
