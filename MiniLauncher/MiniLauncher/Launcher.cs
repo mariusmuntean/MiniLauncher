@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Internals;
 using Xamarin.Forms.Shapes;
@@ -281,47 +282,58 @@ namespace MiniLauncher
 
                 imageButton.SetBinding(ImageButton.CommandProperty, nameof(IItem.Command));
 
-                imageButton.Pressed += (sender, args) => { OnChildPressed(payload); };
-                imageButton.Released += (sender, args) => { OnChildReleased(payload); };
+                imageButton.Pressed += async (sender, args) => { await OnChildPressed(payload); };
+                imageButton.Released += async (sender, args) => { await OnChildReleased(payload); };
 
                 return imageButton;
             });
         }
 
-        private void OnChildPressed(T payload)
+        private async Task OnChildPressed(T payload)
         {
+            // If the pressed or released animation is still running then wait a bit
+            while (this.AnimationIsRunning(ChildPressedAnimationName) || this.AnimationIsRunning(ChildReleasedAnimationName))
+            {
+                await Task.Delay(10);
+            }
+
+            var parentAnimation = new Animation();
             var childrenToAnimate = FindChildrenToAnimate(payload);
 
-            var startScale = childrenToAnimate.First().Scale;
-            var endScale = 0.9d * startScale;
-            var childrenAnimation = new Animation(d =>
+            foreach (var childView in childrenToAnimate)
             {
-                foreach (var child in childrenToAnimate)
-                {
-                    child.Scale = d;
-                }
-            }, startScale, endScale, Easing.CubicInOut);
+                var startScale = childView.Scale;
+                var endScale = 0.9d * startScale;
+                var childAnimation = new Animation(d => { childView.Scale = d; }, startScale, endScale, Easing.CubicInOut);
+
+                parentAnimation.Add(0.0, 1.0, childAnimation);
+            }
 
             this.AbortAnimation(ChildReleasedAnimationName);
-            childrenAnimation.Commit(this, ChildPressedAnimationName);
+            parentAnimation.Commit(this, ChildPressedAnimationName);
         }
 
-        private void OnChildReleased(T payload)
+        private async Task OnChildReleased(T payload)
         {
+            // If the pressed or released animation is still running then wait a bit
+            while (this.AnimationIsRunning(ChildPressedAnimationName) || this.AnimationIsRunning(ChildReleasedAnimationName))
+            {
+                await Task.Delay(10);
+            }
+
+            var parentAnimation = new Animation();
             var childrenToAnimate = FindChildrenToAnimate(payload);
 
-            var startScale = childrenToAnimate.First().Scale;
-            var endScale = ChildNeutralScale;
-            var childrenAnimation = new Animation(d =>
+            foreach (var childView in childrenToAnimate)
             {
-                foreach (var child in childrenToAnimate)
-                {
-                    child.Scale = d;
-                }
-            }, startScale, endScale, Easing.CubicInOut);
+                var startScale = childView.Scale;
+                var endScale = childView.Scale + childView.Scale / 9d;
+                var childAnimation = new Animation(d => { childView.Scale = d; }, startScale, endScale, Easing.CubicInOut);
+                parentAnimation.Add(0.0d, 1.0d, childAnimation);
+            }
 
             this.AbortAnimation(ChildPressedAnimationName);
-            childrenAnimation.Commit(this, ChildReleasedAnimationName);
+            parentAnimation.Commit(this, ChildReleasedAnimationName);
         }
 
         private View[] FindChildrenToAnimate(T payload)
