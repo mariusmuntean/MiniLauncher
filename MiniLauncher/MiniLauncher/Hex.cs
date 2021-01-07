@@ -34,5 +34,10 @@ namespace MiniLauncher
                 return (_q * 397) ^ _r;
             }
         }
+
+        public override string ToString()
+        {
+            return $"Q:{Q}, R:{R}";
+        }
     }
 }

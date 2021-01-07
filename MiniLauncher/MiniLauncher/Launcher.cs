@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Xamarin.Forms;
+using Xamarin.Forms.Internals;
 using Xamarin.Forms.Shapes;
 
 namespace MiniLauncher
@@ -74,6 +75,26 @@ namespace MiniLauncher
             TranslateChildren();
         }
 
+        private void ScaleChild(View child)
+        {
+            var minDistance = 0.0d;
+            var maxDistance = Math.Sqrt(Math.Pow(_content.Width, 2) + Math.Pow(_content.Height, 2)) * 0.5d; // half of the content view's diagonal  
+
+            var minScale = 0.0d;
+            var maxScale = 0.85d;
+
+            var horizontalDistance = _content.Width / 2.0d - (child.X + child.Width / 2.0d + _xTranslation);
+            var verticalDistance = _content.Height / 2.0d - (child.Y + child.Height / 2.0d + _yTranslation);
+            var childDistanceFromCenter = Math.Sqrt(
+                    Math.Pow(horizontalDistance, 2) +
+                    Math.Pow(verticalDistance, 2)
+                )
+                .Clamp(minDistance, maxDistance);
+
+            var scaleRange = maxScale - minScale;
+            child.Scale = (1 - Easing.SinInOut.Ease(childDistanceFromCenter / maxDistance)) * scaleRange + minScale;
+        }
+
         private void SnapToNearestHex()
         {
             // If the space has no hexes, then just leave
@@ -83,12 +104,7 @@ namespace MiniLauncher
             }
 
             // First, work out which Hex is now in the center. It might be an occupied Hex or a free one.
-            var fractionalQ = (Sqrt3_by_3 * -_xTranslation - 0.3333 * -_yTranslation) / Size;
-            var fractionalR = 0.6666 * -_yTranslation / Size;
-
-            var q = (int) Math.Truncate(fractionalQ);
-            var r = (int) Math.Truncate(fractionalR);
-            var centerHex = new Hex(q, r);
+            var centerHex = _hex2Pix.ToHex(-_xTranslation, -_yTranslation, Size);
 
             // If occupied Hex: just center it.
             if (_space.Contains(centerHex))
@@ -120,7 +136,7 @@ namespace MiniLauncher
             var parentAnimation = new Animation(d => TranslateChildren());
             parentAnimation.Add(0, 1, horizontalSnapAnimation);
             parentAnimation.Add(0, 1, verticalSnapAnimation);
-            parentAnimation.Commit(this, "SnapChildrenAnimation");
+            parentAnimation.Commit(this, "SnapChildrenAnimation", length: 500);
         }
 
         private void TranslateChildren()
@@ -129,6 +145,8 @@ namespace MiniLauncher
             {
                 child.TranslationX = _xTranslation;
                 child.TranslationY = _yTranslation;
+
+                ScaleChild(child);
             }
         }
 
@@ -213,8 +231,7 @@ namespace MiniLauncher
         private void RenderChild(Hex hex, T payload)
         {
             var (x, y) = _hex2Pix.ToPix(hex, Size);
-            var w = Sqrt3 * Size;
-            var h = 2 * Size;
+            var (w, h) = _hex2Pix.ComputeHexDimensions(Size);
 
             var view = ItemTemplate switch
             {
@@ -243,6 +260,8 @@ namespace MiniLauncher
                 Constraint.RelativeToParent(parent => w),
                 Constraint.RelativeToParent(parent => h)
             );
+
+            ScaleChild(view);
         }
 
         private DataTemplate GetDefaultItemTemplate(T payload, double width, double height)
