@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Internals;
+using Xamarin.Forms.PlatformConfiguration;
 using Xamarin.Forms.Shapes;
 
 namespace MiniLauncher
@@ -18,6 +19,7 @@ namespace MiniLauncher
         private const double ChildNeutralScale = 0.8d;
         private const string ChildReleasedAnimationName = "ChildReleasedAnimation";
         private const string ChildPressedAnimationName = "ChildPressedAnimation";
+        private const string KineticScrollAnimationName = "KineticScrollAnimation";
 
         private readonly RelativeLayout _content;
         private readonly RingCompute _ringCompute;
@@ -26,6 +28,11 @@ namespace MiniLauncher
         private double _yTranslationAtGestureStart = 0.0d;
         private double _xTranslation = 0.0d;
         private double _yTranslation = 0.0d;
+
+        private double _previousXTranslationTotal = 0.0d;
+        private double _previousYTranslationTotal = 0.0d;
+        private double _xTranslationDelta = 0.0d;
+        private double _yTranslationDelta = 0.0d;
 
         private HexSpace<T> _space = new HexSpace<T>();
         private readonly Hex2Pix _hex2Pix = new Hex2Pix();
@@ -59,13 +66,20 @@ namespace MiniLauncher
                 case GestureStatus.Started:
                     _xTranslationAtGestureStart = _xTranslation;
                     _yTranslationAtGestureStart = _yTranslation;
+
+                    this.AbortAnimation(KineticScrollAnimationName);
                     break;
                 case GestureStatus.Running:
                     _xTranslation = _xTranslationAtGestureStart + e.TotalX;
                     _yTranslation = _yTranslationAtGestureStart + e.TotalY;
+
+                    _xTranslationDelta = e.TotalX - _previousXTranslationTotal;
+                    _yTranslationDelta = e.TotalY - _previousYTranslationTotal;
+                    _previousXTranslationTotal = e.TotalX;
+                    _previousYTranslationTotal = e.TotalY;
                     break;
                 case GestureStatus.Completed:
-                    SnapToNearestHex();
+                    KineticTranslateChildren(_xTranslationDelta, _yTranslationDelta);
                     break;
                 case GestureStatus.Canceled:
                     break;
@@ -74,6 +88,43 @@ namespace MiniLauncher
             }
 
             TranslateChildren();
+        }
+
+        private void KineticTranslateChildren(double xTranslationDelta, double yTranslationDelta)
+        {
+            // Determine the distance of the last finger movement.
+            var distance = Math.Sqrt(Math.Pow(xTranslationDelta, 2) + Math.Pow(yTranslationDelta, 2));
+
+            // Determine the proportion of the x and y components.
+            var xProportion = Math.Abs(distance / xTranslationDelta);
+            var yProportion = Math.Abs(distance / yTranslationDelta);
+
+            // Determine the max translation distance. The idea is to stop the kinetic scrolling when there are no more visible Hexes.
+            var farthestHexes = _space.GetFarthestHexes(new Hex(0, 0));
+            var farthestHex = farthestHexes.Any() ? farthestHexes.First() : new Hex(0, 0);
+            var (farX, farY) = _hex2Pix.ToPix(farthestHex, Size);
+            var farthestHexDistanceToCenter = Math.Max(_content.Width / 2.0d, _content.Height / 2.0d) + Math.Sqrt(Math.Pow(farX, 2) + Math.Pow(farY, 2));
+
+            // Continue moving in the same direction
+            this.AnimateKinetic(KineticScrollAnimationName,
+                (sign, velocity) =>
+                {
+                    // Direction is kept by accounting for the proportion of the x/y component.
+                    _xTranslation += Math.Sign(xTranslationDelta) * velocity / xProportion;
+                    _yTranslation += Math.Sign(yTranslationDelta) * velocity / yProportion;
+                    TranslateChildren();
+
+                    // If the kinetic scrolling translated past the max distance then stop.
+                    var totalTranslation = Math.Sqrt(Math.Pow(_xTranslation, 2) + Math.Pow(_yTranslation, 2));
+                    return totalTranslation <= farthestHexDistanceToCenter;
+                },
+                distance,
+                0.1d,
+                () =>
+                {
+                    // When the kinetic animation is finished, just snap to the nearest Hex
+                    SnapToNearestHex();
+                });
         }
 
         private void ScaleChild(View child)
@@ -278,7 +329,7 @@ namespace MiniLauncher
                     RadiusY = width / 2.0d
                 };
                 imageButton.Scale = ChildNeutralScale;
-                //imageButton.InputTransparent = true;
+                imageButton.InputTransparent = true;
 
                 imageButton.SetBinding(ImageButton.CommandProperty, nameof(IItem.Command));
 

@@ -92,15 +92,42 @@ namespace MiniLauncher
             {
                 return new Hex[] { };
             }
+            
+            if (_space.Count == 1 && _space.Single().Key.Equals(hex))
+            {
+                return new Hex[] { };
+            }
 
             var nearestHexes = _space
                 .Where(hexPayloadKV => !hexPayloadKV.Key.Equals(hex))
                 .Select(hexPayloadKV => (hexPayloadKV.Key, GetDistance(hex, hexPayloadKV.Key)))
-                .GroupBy(distanceGrouping => distanceGrouping.Item2)
+                .GroupBy(hexDistTuple => hexDistTuple.Item2)
                 .OrderBy(distanceGrouping => distanceGrouping.Key)
                 .First();
 
             return nearestHexes.Select((hexDistTuple, i) => hexDistTuple.Key).ToArray();
+        }
+        
+        public Hex[] GetFarthestHexes(Hex hex)
+        {
+            if (!_space.Any())
+            {
+                return new Hex[] { };
+            }
+
+            if (_space.Count == 1 && _space.Single().Key.Equals(hex))
+            {
+                return new Hex[] { };
+            }
+
+            var farthestHexes = _space
+                .Where(hexPayloadKV => !hexPayloadKV.Key.Equals(hex))
+                .Select(hexPayloadKV => (hexPayloadKV.Key, GetDistance(hex, hexPayloadKV.Key)))
+                .GroupBy(hexDistTuple => hexDistTuple.Item2)
+                .OrderByDescending(distanceGrouping => distanceGrouping.Key)
+                .First();
+
+            return farthestHexes.Select((hexDistTuple, i) => hexDistTuple.Key).ToArray();
         }
 
         private int GetDistance(Hex a, Hex b)
