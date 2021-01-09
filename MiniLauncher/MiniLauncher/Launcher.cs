@@ -20,6 +20,7 @@ namespace MiniLauncher
         private const string ChildReleasedAnimationName = "ChildReleasedAnimation";
         private const string ChildPressedAnimationName = "ChildPressedAnimation";
         private const string KineticScrollAnimationName = "KineticScrollAnimation";
+        private const string SnapChildrenAnimationName = "SnapChildrenAnimation";
 
         private readonly RelativeLayout _content;
         private readonly RingCompute _ringCompute;
@@ -119,7 +120,7 @@ namespace MiniLauncher
                     return totalTranslation <= farthestHexDistanceToCenter;
                 },
                 distance,
-                0.1d,
+                0.05d,
                 () =>
                 {
                     // When the kinetic animation is finished, just snap to the nearest Hex
@@ -134,17 +135,21 @@ namespace MiniLauncher
 
             var minScale = 0.0d;
             var maxScale = 0.85d;
-
-            var horizontalDistance = _content.Width / 2.0d - (child.X + child.Width / 2.0d + _xTranslation);
-            var verticalDistance = _content.Height / 2.0d - (child.Y + child.Height / 2.0d + _yTranslation);
-            var childDistanceFromCenter = Math.Sqrt(
-                    Math.Pow(horizontalDistance, 2) +
-                    Math.Pow(verticalDistance, 2)
-                )
-                .Clamp(minDistance, maxDistance);
+            var childDistanceFromCenter = ComputeDistanceFromCenter(child).Clamp(minDistance, maxDistance);
 
             var scaleRange = maxScale - minScale;
             child.Scale = (1 - Easing.SinInOut.Ease(childDistanceFromCenter / maxDistance)) * scaleRange + minScale;
+        }
+
+        private double ComputeDistanceFromCenter(View child)
+        {
+            var horizontalDistance = _content.Width / 2.0d - (child.X + child.Width / 2.0d + _xTranslation);
+            var verticalDistance = _content.Height / 2.0d - (child.Y + child.Height / 2.0d + _yTranslation);
+            var childDistanceFromCenter = Math.Sqrt(
+                Math.Pow(horizontalDistance, 2) +
+                Math.Pow(verticalDistance, 2)
+            );
+            return childDistanceFromCenter;
         }
 
         private void SnapToNearestHex()
@@ -188,15 +193,16 @@ namespace MiniLauncher
             var parentAnimation = new Animation(d => TranslateChildren());
             parentAnimation.Add(0, 1, horizontalSnapAnimation);
             parentAnimation.Add(0, 1, verticalSnapAnimation);
-            parentAnimation.Commit(this, "SnapChildrenAnimation", length: 500);
+            parentAnimation.Commit(this, SnapChildrenAnimationName, length: 500);
         }
 
         private void TranslateChildren()
         {
             foreach (var child in _content.Children)
             {
-                child.TranslationX = _xTranslation;
-                child.TranslationY = _yTranslation;
+                var childDistToCenter = ComputeDistanceFromCenter(child);
+                child.TranslationX = _xTranslation * (1 - childDistToCenter / 300.0d);
+                child.TranslationY = _yTranslation * (1 - childDistToCenter / 300.0d);
 
                 ScaleChild(child);
             }
