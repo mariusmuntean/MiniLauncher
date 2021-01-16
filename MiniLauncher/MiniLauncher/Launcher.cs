@@ -133,7 +133,7 @@ namespace MiniLauncher
             // Translation
             child.TranslationX = _xTranslation;
             child.TranslationY = _yTranslation;
-            
+
             var (hScaling, vScaling) = ComputeScaling(child);
 
             // Scaling
@@ -144,7 +144,7 @@ namespace MiniLauncher
         {
             var minScale = 0.0d;
             var normalScale = 0.80d;
-            var maxScale = 0.95d;
+            var maxScale = 1.0d;
 
             var hScaling = normalScale;
             var vScaling = normalScale;
@@ -224,19 +224,26 @@ namespace MiniLauncher
             }
             else // If free Hex: find the nearest occupied Hex and move it to the center
             {
-                var nearestHex = _space.GetNearestHexes(centerHex).First();
+                var nearestHexes = _space.GetNearestHexes(centerHex);
+
+                // From the equidistant Hexes, determine the one where the View is closest to the center and snap to that Hex
+                var nearestHex = nearestHexes.OrderBy(hex => GetViewForHex(hex).GetDistanceToCenter()).FirstOrDefault();
                 SnapToHex(nearestHex);
             }
 
             void SnapToHex(Hex hex)
             {
-                var centerPayload = _space.GetPayload(hex);
-                var centerChild = _content.Children.First(c => c.BindingContext == centerPayload);
+                var centerChild = GetViewForHex(hex);
                 SnapChildren(
                     _content.Width / 2.0d - (centerChild.X + centerChild.Width / 2.0d + _xTranslation),
                     _content.Height / 2.0d - (centerChild.Y + centerChild.Height / 2.0d + _yTranslation)
                 );
             }
+        }
+
+        private View GetViewForHex(Hex hex)
+        {
+            return _content.Children.FirstOrDefault(view => view.BindingContext == _space.GetPayload(hex));
         }
 
         private void SnapChildren(double horizontalDistance, double verticalDistance)
@@ -302,9 +309,10 @@ namespace MiniLauncher
                     foreach (var removedPayload in e.OldItems)
                     {
                         var hexPayloadToRemove = _space.Elements().FirstOrDefault(pair => pair.Value == removedPayload);
-                        _space.Remove(hexPayloadToRemove.Key);
+                        var hexToRemove = hexPayloadToRemove.Key;
+                        _space.Remove(hexToRemove);
 
-                        var viewToRemove = _content.Children.FirstOrDefault(v => v.BindingContext == removedPayload);
+                        var viewToRemove = GetViewForHex(hexToRemove);
                         _content.Children.Remove(viewToRemove);
                     }
 
