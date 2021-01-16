@@ -13,7 +13,10 @@ namespace MiniLauncher.Sample
 
             InitializeComponent();
 
-            MainPage = new MainPage();
+            MainPage = new NavigationPage(new MainPage())
+            {
+                BarBackgroundColor = Color.FromHex("#282828")
+            };
         }
 
         protected override void OnStart()

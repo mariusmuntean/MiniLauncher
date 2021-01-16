@@ -128,37 +128,71 @@ namespace MiniLauncher
                 });
         }
 
-        private void ScaleTranslateChild(View child)
+        private void TransformChild(View child)
         {
-            var minDistance = 0.0d;
-            // var maxDistance = Math.Sqrt(Math.Pow(_content.Width, 2) + Math.Pow(_content.Height, 2)) * 0.5d; // half of the content view's diagonal  
-            var maxDistance = Math.Min(_content.Width, _content.Height) * 0.5d; // half of the smaller dimension  
-
-            var minScale = 0.0d;
-            var maxScale = 0.85d;
-            var (distance, hDistance, vDistance) = ComputeDistanceFromCenter(child);
-            var childDistanceFromCenter = distance.Clamp(minDistance, maxDistance);
-
-            var scaleRange = maxScale - minScale;
-            var distanceFromCenterNormalized = childDistanceFromCenter / maxDistance;
-            var distanceFromCenterEased = Easing.SpringIn.Ease(distanceFromCenterNormalized).Clamp(0.0d, 1.0d);
-            var childScale = (1 - distanceFromCenterEased) * scaleRange + minScale;
+            // Translation
+            child.TranslationX = _xTranslation;
+            child.TranslationY = _yTranslation;
+            
+            var (hScaling, vScaling) = ComputeScaling(child);
 
             // Scaling
-            child.Scale = childScale;
+            child.Scale = Math.Min(hScaling, vScaling);
+        }
 
-            // Translation
-            var hProportion = Math.Abs(distance / hDistance);
-            var vProportion = Math.Abs(distance / vDistance);
+        private (double hScaling, double vScaling) ComputeScaling(View child)
+        {
+            var minScale = 0.0d;
+            var normalScale = 0.80d;
+            var maxScale = 0.95d;
 
-            // child.TranslationX = _xTranslation - (child.Width - (child.Width * childScale) * 0.5d);
-            // child.TranslationY = _yTranslation - (child.Height - (child.Height * childScale) * 0.5d);
+            var hScaling = normalScale;
+            var vScaling = normalScale;
+            var regionWidth = 0.15d * Math.Min(_content.Width, _content.Height);
+            var centerRegionRadius = 0.1d * Math.Min(_content.Width, _content.Height);
 
-            var maxHDistanceProportion = Math.Abs(_xTranslation / maxDistance);
-            var maxVDistanceProportion = Math.Abs(_yTranslation / maxDistance);
+            var childCenterX = child.X + (child.Width / 2.0d) + child.TranslationX;
+            var childCenterY = child.Y + (child.Height / 2.0d) + child.TranslationY;
 
-            child.TranslationX += (1.0d - Easing.SpringIn.Ease(maxHDistanceProportion).Clamp(0.0, 1.0d)) * (_xTranslation - child.TranslationX);
-            child.TranslationY += (1.0d - Easing.SpringIn.Ease(maxVDistanceProportion).Clamp(0.0, 1.0d)) * (_yTranslation - child.TranslationY);
+            // near the left edge?
+            if (childCenterX <= regionWidth)
+            {
+                hScaling = minScale + (childCenterX / regionWidth).Clamp(0.0d, 1.0d) * normalScale;
+            }
+            else
+            {
+                var rightEdgeStart = _content.Width - regionWidth;
+                if (childCenterX >= rightEdgeStart) // near the right edge?
+                {
+                    var pastRightEdgeProportion = 1.0d - ((childCenterX - rightEdgeStart) / regionWidth).Clamp(0.0d, 1.0d);
+                    hScaling = minScale + pastRightEdgeProportion * normalScale;
+                }
+            }
+
+            // near the top edge?
+            if (childCenterY <= regionWidth)
+            {
+                vScaling = minScale + (childCenterY / regionWidth).Clamp(0.0d, 1.0d) * normalScale;
+            }
+            else
+            {
+                var bottomEdgeStart = _content.Height - regionWidth;
+                if (childCenterY >= bottomEdgeStart) // near the bottom edge?
+                {
+                    var pastBottomEdgeProportion = (1.0d - ((childCenterY - bottomEdgeStart) / regionWidth).Clamp(0.0d, 1.0d));
+                    vScaling = minScale + pastBottomEdgeProportion * normalScale;
+                }
+            }
+
+            // near the center?
+            var (distance, hDistance, vDistance) = ComputeDistanceFromCenter(child);
+            if (distance <= centerRegionRadius)
+            {
+                hScaling = normalScale + (1.0d - distance / centerRegionRadius) * (maxScale - normalScale);
+                vScaling = hScaling;
+            }
+
+            return (hScaling, vScaling);
         }
 
         private (double distance, double hDistance, double vDistance) ComputeDistanceFromCenter(View child)
@@ -220,7 +254,7 @@ namespace MiniLauncher
         {
             foreach (var child in _content.Children)
             {
-                ScaleTranslateChild(child);
+                TransformChild(child);
             }
         }
 
@@ -339,7 +373,7 @@ namespace MiniLauncher
             );
 
             // Transform the view
-            ScaleTranslateChild(view);
+            TransformChild(view);
 
             // Show the view when ready
             view.IsVisible = true;
