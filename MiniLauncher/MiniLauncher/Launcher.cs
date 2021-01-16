@@ -88,7 +88,7 @@ namespace MiniLauncher
                     throw new ArgumentOutOfRangeException();
             }
 
-            TranslateChildren();
+            ScaleTranslateChildren();
         }
 
         private void KineticTranslateChildren(double xTranslationDelta, double yTranslationDelta)
@@ -113,7 +113,7 @@ namespace MiniLauncher
                     // Direction is kept by accounting for the proportion of the x/y component.
                     _xTranslation += Math.Sign(xTranslationDelta) * velocity / xProportion;
                     _yTranslation += Math.Sign(yTranslationDelta) * velocity / yProportion;
-                    TranslateChildren();
+                    ScaleTranslateChildren();
 
                     // If the kinetic scrolling translated past the max distance then stop.
                     var totalTranslation = Math.Sqrt(Math.Pow(_xTranslation, 2) + Math.Pow(_yTranslation, 2));
@@ -128,28 +128,48 @@ namespace MiniLauncher
                 });
         }
 
-        private void ScaleChild(View child)
+        private void ScaleTranslateChild(View child)
         {
             var minDistance = 0.0d;
-            var maxDistance = Math.Sqrt(Math.Pow(_content.Width, 2) + Math.Pow(_content.Height, 2)) * 0.5d; // half of the content view's diagonal  
+            // var maxDistance = Math.Sqrt(Math.Pow(_content.Width, 2) + Math.Pow(_content.Height, 2)) * 0.5d; // half of the content view's diagonal  
+            var maxDistance = Math.Min(_content.Width, _content.Height) * 0.5d; // half of the smaller dimension  
 
             var minScale = 0.0d;
             var maxScale = 0.85d;
-            var childDistanceFromCenter = ComputeDistanceFromCenter(child).Clamp(minDistance, maxDistance);
+            var (distance, hDistance, vDistance) = ComputeDistanceFromCenter(child);
+            var childDistanceFromCenter = distance.Clamp(minDistance, maxDistance);
 
             var scaleRange = maxScale - minScale;
-            child.Scale = (1 - Easing.SinInOut.Ease(childDistanceFromCenter / maxDistance)) * scaleRange + minScale;
+            var distanceFromCenterNormalized = childDistanceFromCenter / maxDistance;
+            var distanceFromCenterEased = Easing.SpringIn.Ease(distanceFromCenterNormalized).Clamp(0.0d, 1.0d);
+            var childScale = (1 - distanceFromCenterEased) * scaleRange + minScale;
+
+            // Scaling
+            child.Scale = childScale;
+
+            // Translation
+            var hProportion = Math.Abs(distance / hDistance);
+            var vProportion = Math.Abs(distance / vDistance);
+
+            // child.TranslationX = _xTranslation - (child.Width - (child.Width * childScale) * 0.5d);
+            // child.TranslationY = _yTranslation - (child.Height - (child.Height * childScale) * 0.5d);
+
+            var maxHDistanceProportion = Math.Abs(_xTranslation / maxDistance);
+            var maxVDistanceProportion = Math.Abs(_yTranslation / maxDistance);
+
+            child.TranslationX += (1.0d - Easing.SpringIn.Ease(maxHDistanceProportion).Clamp(0.0, 1.0d)) * (_xTranslation - child.TranslationX);
+            child.TranslationY += (1.0d - Easing.SpringIn.Ease(maxVDistanceProportion).Clamp(0.0, 1.0d)) * (_yTranslation - child.TranslationY);
         }
 
-        private double ComputeDistanceFromCenter(View child)
+        private (double distance, double hDistance, double vDistance) ComputeDistanceFromCenter(View child)
         {
-            var horizontalDistance = _content.Width / 2.0d - (child.X + child.Width / 2.0d + _xTranslation);
-            var verticalDistance = _content.Height / 2.0d - (child.Y + child.Height / 2.0d + _yTranslation);
+            var horizontalDistance = _content.Width / 2.0d - (child.X + child.Width / 2.0d + child.TranslationX);
+            var verticalDistance = _content.Height / 2.0d - (child.Y + child.Height / 2.0d + child.TranslationY);
             var childDistanceFromCenter = Math.Sqrt(
                 Math.Pow(horizontalDistance, 2) +
                 Math.Pow(verticalDistance, 2)
             );
-            return childDistanceFromCenter;
+            return (childDistanceFromCenter, horizontalDistance, verticalDistance);
         }
 
         private void SnapToNearestHex()
@@ -190,21 +210,17 @@ namespace MiniLauncher
             var horizontalSnapAnimation = new Animation(d => { _xTranslation = d; }, _xTranslation, _xTranslation + horizontalDistance, easing: Easing.CubicOut);
             var verticalSnapAnimation = new Animation(d => { _yTranslation = d; }, _yTranslation, _yTranslation + verticalDistance, easing: Easing.CubicOut);
 
-            var parentAnimation = new Animation(d => TranslateChildren());
+            var parentAnimation = new Animation(d => ScaleTranslateChildren());
             parentAnimation.Add(0, 1, horizontalSnapAnimation);
             parentAnimation.Add(0, 1, verticalSnapAnimation);
             parentAnimation.Commit(this, SnapChildrenAnimationName, length: 500);
         }
 
-        private void TranslateChildren()
+        private void ScaleTranslateChildren()
         {
             foreach (var child in _content.Children)
             {
-                var childDistToCenter = ComputeDistanceFromCenter(child);
-                child.TranslationX = _xTranslation * (1 - childDistToCenter / 300.0d);
-                child.TranslationY = _yTranslation * (1 - childDistToCenter / 300.0d);
-
-                ScaleChild(child);
+                ScaleTranslateChild(child);
             }
         }
 
@@ -296,8 +312,11 @@ namespace MiniLauncher
                 _ when !(ItemTemplate is null) => ItemTemplate.CreateContent(),
                 _ when ItemTemplate is null => GetDefaultItemTemplate(payload, w, h).CreateContent()
             } as View;
-            view.TranslationX = _xTranslation;
-            view.TranslationY = _yTranslation;
+
+            // Hide the view as long as layouting and transformation isn't ready
+            view.IsVisible = false;
+
+            // Add the view to the layout
             view.BindingContext = payload;
             _content.Children.Add(view,
                 Constraint.RelativeToParent(parent =>
@@ -319,7 +338,11 @@ namespace MiniLauncher
                 Constraint.RelativeToParent(parent => h)
             );
 
-            ScaleChild(view);
+            // Transform the view
+            ScaleTranslateChild(view);
+
+            // Show the view when ready
+            view.IsVisible = true;
         }
 
         private DataTemplate GetDefaultItemTemplate(T payload, double width, double height)
